@@ -3,6 +3,9 @@
 echo "=============================="
 echo "服务器初始化脚本"
 echo "=============================="
+# Function declarations
+declare -f install_nginx
+declare -f configure_ssl
 
 # 检查是否以 root 身份运行
 if [[ $EUID -ne 0 ]]; then
@@ -18,60 +21,15 @@ apt update && apt upgrade -y
 echo "安装常用工具..."
 apt install -y curl wget vim
 
-# Nginx 安装与配置
-read -p "是否需要安装和配置 Nginx？[y/n]: " install_nginx
-if [[ "$install_nginx" == "y" ]]; then
-    echo "安装 Nginx..."
-    apt install -y nginx
-    systemctl enable nginx
-    systemctl start nginx
-    echo "Nginx 安装完成！"
+# 是否安装Nginx
+echo "是否需要安装Nginx？(y/n)"
+read nginx_choice
 
-    # 配置虚拟主机
-    read -p "是否需要配置虚拟主机？[y/n]: " configure_vhost
-    if [[ "$configure_vhost" == "y" ]]; then
-        read -p "请输入域名（例如 example.com）: " domain
-        read -p "请输入站点根目录路径（默认 /var/www/$domain）: " root_dir
-        root_dir=${root_dir:-/var/www/$domain}
-
-        mkdir -p $root_dir
-        chown -R www-data:www-data $root_dir
-        chmod -R 755 $root_dir
-
-        echo "创建 Nginx 配置文件..."
-        cat > /etc/nginx/sites-available/$domain <<EOL
-                server {
-                    listen 80;
-                    server_name $domain www.$domain;
-
-                    root $root_dir;
-                    index index.html index.htm;
-
-                    location / {
-                        try_files \$uri \$uri/ =404;
-                    }
-                }
-EOL
-
-        ln -s /etc/nginx/sites-available/$domain /etc/nginx/sites-enabled/
-        nginx -t && systemctl reload nginx
-        echo "虚拟主机 $domain 配置完成，站点根目录为 $root_dir"
-    fi 
-
-    # 配置 HTTPS
-    read -p "是否需要配置 HTTPS（自动获取证书并配置）？[y/n]: " configure_https
-    if [[ "$configure_https" == "y" ]]; then
-        if ! command -v certbot &> /dev/null; then
-            echo "安装 Certbot..."
-            apt install -y certbot python3-certbot-nginx
-        fi
-
-        echo "为域名 $domain 获取并配置 HTTPS 证书..."
-        certbot --nginx -d $domain -d www.$domain
-        echo "HTTPS 配置完成！"
-    fi 
+if [ "$nginx_choice" = "y" ]; then
+    install_nginx
+    configure_ssl
 else
-    echo "已跳过 Nginx 安装和配置。"
+    echo "跳过Nginx安装"
 fi
 
 # 清理系统
@@ -82,3 +40,37 @@ apt autoclean
 echo "=============================="
 echo "初始化配置完成！"
 echo "=============================="
+
+
+############################################
+# 脚本函数
+############################################
+# Nginx安装函数
+install_nginx() {
+    echo "开始安装Nginx..."
+    apt install -y nginx
+    systemctl start nginx
+    systemctl enable nginx
+    echo "Nginx安装完成！"
+}
+
+# SSL证书配置函数
+configure_ssl() {
+    echo "是否需要配置SSL证书？(y/n)"
+    read ssl_choice
+    
+    if [ "$ssl_choice" = "y" ]; then
+        echo "请输入域名："
+        read domain_name
+        
+        # 安装certbot
+        apt install -y certbot python3-certbot-nginx
+        
+        # 申请证书
+        certbot --nginx -d $domain_name
+        
+        echo "SSL证书配置完成！"
+    else
+        echo "跳过SSL证书配置"
+    fi
+}
