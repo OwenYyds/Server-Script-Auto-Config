@@ -3,6 +3,6 @@
 ######
 一键安装
 ```bash
-curl -sSL https://raw.githubusercontent.com/OwenYyds/server-setup-scripts/main/init_script.sh | bash
+curl -fsSL https://raw.githubusercontent.com/OwenYyds/server-setup-scripts/main/init_script.sh -o /tmp/init_script.sh && bash /tmp/init_script.sh
 ```
 ######
