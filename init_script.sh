@@ -20,7 +20,7 @@ apt-get update && apt-get upgrade -y
 
 # 安装常用工具（建议增加更多实用工具）
 echo "安装常用工具..."
-apt-get install -y curl wget vim
+apt-get install -y curl wget neovim
 
 # 清理系统
 echo "清理系统..."
