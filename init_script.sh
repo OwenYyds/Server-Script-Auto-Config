@@ -40,17 +40,17 @@ if [[ "$install_nginx" == "y" ]]; then
 
         echo "创建 Nginx 配置文件..."
         cat > /etc/nginx/sites-available/$domain <<EOL
-server {
-    listen 80;
-    server_name $domain www.$domain;
+                server {
+                    listen 80;
+                    server_name $domain www.$domain;
 
-    root $root_dir;
-    index index.html index.htm;
+                    root $root_dir;
+                    index index.html index.htm;
 
-    location / {
-        try_files \$uri \$uri/ =404;
-    }
-}
+                    location / {
+                        try_files \$uri \$uri/ =404;
+                    }
+                }
 EOL
 
         ln -s /etc/nginx/sites-available/$domain /etc/nginx/sites-enabled/
