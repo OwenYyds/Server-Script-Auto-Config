@@ -18,47 +18,33 @@ install_nginx() {
     read -p "请输入需要代理的端口 (例如: 3000): " port
     
     # 创建nginx配置文件
-    cat > "/etc/nginx/sites-available/${domain_name}" <<EOF
+    cat > "/etc/nginx/sites-available/default" <<'EOF'
 server {
     listen 80;
     server_name ${domain_name};
 
     location / {
-        proxy_pass http://localhost:${port};
+        proxy_pass http://127.0.0.1:${port};
         proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_cache_bypass \$http_upgrade;
+        proxy_cache_bypass $http_upgrade;
     }
 }
-EOF
-
-    # 启用站点配置
-    ln -sf "/etc/nginx/sites-available/${domain_name}" "/etc/nginx/sites-enabled/"
-    
-    # 验证nginx配置
+EOF    
+    # Verify config
     if nginx -t; then
         echo "Nginx配置测试成功"
+        systemctl restart nginx
     else
         echo "Nginx配置测试失败"
         exit 1
     fi
 
-    # 重启nginx
-    systemctl restart nginx
-
-    # 询问是否配置SSL证书
-    read -p "是否需要配置SSL证书？(y/n): " ssl_choice
-    if [[ $ssl_choice == "y" || $ssl_choice == "Y" ]]; then
-        # 申请Let's Encrypt证书
-        certbot --nginx -d ${domain_name} --non-interactive --agree-tos --email admin@${domain_name}
-        echo "SSL证书配置完成"
-    fi
-
-    echo "Nginx配置完成！"
-    echo "域名: ${domain_name}"
-    echo "代理端口: ${port}"
 }
 ############################################
 
