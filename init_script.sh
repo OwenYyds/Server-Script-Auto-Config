@@ -51,6 +51,13 @@ echo "Nginx 安装完成！"
 ###############################################
 
 ###############################################
+# 安装 certbot 证书工具
+echo "安装 certbot..."
+apt install certbot python3-certbot-nginx -y
+echo "certbot 安装完成！"
+###############################################
+
+###############################################
 # 安装 小雅Alist
 #echo "安装 小雅Alist..."
 #bash -c "$(curl http://docker.xiaoya.pro/update_new.sh)" -s host
